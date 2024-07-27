@@ -66,10 +66,9 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "openocd-tools" is now active!');
-	const openocdExec = context.workspaceState.get("openocd-tools.path", "openocd");
-	const cfgFileName = context.workspaceState.get("openocd-tools.cfg", "").split("/").pop();
-	const targetFileName = context.workspaceState.get("openocd-tools.target", "").split("/").pop();
-	const svdFileName = context.workspaceState.get("openocd-tools.svd", "").split("/").pop();	
+	const cfgFileName = context.workspaceState.get("openocd-tools.cfg", "").split("[\\/]+").pop();
+	const targetFileName = context.workspaceState.get("openocd-tools.target", "").split("[\\/]+").pop();
+	const svdFileName = context.workspaceState.get("openocd-tools.svd", "").split("[\\/]+").pop();	
 
 	let DebugTerminal: vscode.Terminal | undefined = undefined;
 	let FlashTerminal: vscode.Terminal | undefined = undefined;
@@ -107,6 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarDebug.show();
 
 	const disposableForFlash = vscode.commands.registerCommand('openocd-tools.flash', () => {
+		const openocdExec = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
 		const cfgFile = context.workspaceState.get("openocd-tools.cfg", "");
 		const targetFile = context.workspaceState.get("openocd-tools.target", "");
 		if (cfgFile === '') {
@@ -132,6 +132,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposableForFlash);	
 
 	const disposableForDebug = vscode.commands.registerCommand('openocd-tools.debug', () => {
+		const openocdExec = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
 		const cfgFile = context.workspaceState.get("openocd-tools.cfg", "");
 		const targetFile = context.workspaceState.get("openocd-tools.target", "");
 		const svdFile = context.workspaceState.get("openocd-tools.svd", "");

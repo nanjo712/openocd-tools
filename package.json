@@ -1,12 +1,13 @@
 {
   "name": "openocd-tools",
   "displayName": "openocd-tools",
+  "publisher": "woshiren",
   "repository": {
     "type": "git",
     "url": "https://github.com/nanjo712/openocd-tools.git"
     },
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.91.0"
   },

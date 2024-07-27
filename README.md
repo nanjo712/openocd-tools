@@ -33,5 +33,9 @@ This extension contributes the following settings:
 
 Initial release of openocd-tools
 
+### 0.0.2
+
+Fix bug: path error
+
 ---
 
