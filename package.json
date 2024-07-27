@@ -1,6 +1,10 @@
 {
   "name": "openocd-tools",
   "displayName": "openocd-tools",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanjo712/openocd-tools.git"
+    },
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -39,11 +43,6 @@
     "configuration": {
       "title": "OpenOCD Tools",
       "properties": {
-        "openocd-tools.enable": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable/Disable this extension"
-        },
         "openocd-tools.path": {
           "type": "string",
           "default": "openocd",
@@ -89,7 +88,30 @@
           "group": "1_run@3"
         }
       ]
-    }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openocd-tools",
+          "title": "OpenOCD Tools",
+          "icon": "resources/image.png"
+        }
+      ]
+    },
+    "views": {
+      "openocd-tools": [
+        {
+          "id": "openocd-tools",
+          "name": "OpenOCD Tools"
+        }
+      ]
+    },  
+    "viewsWelcome": [
+      {
+        "view": "openocd-tools",
+        "contents": "[Choose CFG](command:openocd-tools.chooseCfg)\n[Choose Target](command:openocd-tools.chooseTarget)\n[Choose SVD](command:openocd-tools.chooseSVD)"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
