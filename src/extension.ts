@@ -22,9 +22,9 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 				const cfgFile = this.context.workspaceState.get("openocd-tools.cfg", "");
 				const targetFile = this.context.workspaceState.get("openocd-tools.target", "");
 				const svdFile = this.context.workspaceState.get("openocd-tools.svd", "");
-				const cfgFileName = cfgFile.split("/").pop();
-				const targetFileName = targetFile.split("/").pop();
-				const svdFileName = svdFile.split("/").pop();
+				const cfgFileName = cfgFile.split("[/\\]+").pop();
+				const targetFileName = targetFile.split("[/\\]+").pop();
+				const svdFileName = svdFile.split("[/\\]+").pop();
 				if (cfgFile === "") {
 					const item = new vscode.TreeItem("Choose CFG file", vscode.TreeItemCollapsibleState.None);
 					item.command = { command: "openocd-tools.chooseCfg", title: "Choose CFG file" };
@@ -66,34 +66,12 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "openocd-tools" is now active!');
-	const cfgFileName = context.workspaceState.get("openocd-tools.cfg", "").split("[\\/]+").pop();
-	const targetFileName = context.workspaceState.get("openocd-tools.target", "").split("[\\/]+").pop();
-	const svdFileName = context.workspaceState.get("openocd-tools.svd", "").split("[\\/]+").pop();	
 
 	let DebugTerminal: vscode.Terminal | undefined = undefined;
 	let FlashTerminal: vscode.Terminal | undefined = undefined;
 	
 	const openocdTreeDataProvider = new OpenOCDTreeDataProvider(context);
 	vscode.window.registerTreeDataProvider("openocd-tools", openocdTreeDataProvider);
-
-
-	// const statusBarChooseCfg = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	// statusBarChooseCfg.text = "$(file-directory) CFG";
-	// statusBarChooseCfg.command = "openocd-tools.chooseCfg";
-	// statusBarChooseCfg.tooltip = "CFG file for OpenOCD: [" + cfgFileName + "]";
-	// statusBarChooseCfg.show();
-
-	// const statusBarChooseTarget = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	// statusBarChooseTarget.text = "$(file-directory) TARGET";
-	// statusBarChooseTarget.command = "openocd-tools.chooseTarget";
-	// statusBarChooseTarget.tooltip = "Target file for OpenOCD: [" + targetFileName + "]";
-	// statusBarChooseTarget.show();
-
-	// const statusBarChooseSVD = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	// statusBarChooseSVD.text = "$(file-directory) SVD";
-	// statusBarChooseSVD.command = "openocd-tools.chooseSVD";
-	// statusBarChooseSVD.tooltip = "SVD file for OpenOCD: [" + svdFileName + "]";
-	// statusBarChooseSVD.show();
 
 	const statusBarFlash = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 	statusBarFlash.text = "$(triangle-right) Flash";
@@ -122,7 +100,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage("Build failed");
 				return;
 			}
-			if (!FlashTerminal) {
+			if (!FlashTerminal || FlashTerminal.exitStatus) {
 				FlashTerminal = vscode.window.createTerminal("OpenOCD Flash");
 			}
 			FlashTerminal.show();
@@ -152,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage("Build failed");
 				return;
 			}
-			if (!DebugTerminal) {
+			if (!DebugTerminal || DebugTerminal.exitStatus) {
 				DebugTerminal = vscode.window.createTerminal("OpenOCD Debug");
 			}
 			DebugTerminal.show();

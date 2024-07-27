@@ -37,5 +37,10 @@ Initial release of openocd-tools
 
 Fix bug: path error
 
+### 0.0.3
+
+- 修复不能正确识别反斜杠的问题
+- 修复终端关闭后无法再次打开的问题
+
 ---
 
