@@ -30,6 +30,10 @@
       {
         "command": "openocd-tools.chooseTarget",
         "title": "Choose Target"
+      },
+      {
+        "command": "openocd-tools.chooseSVD",
+        "title": "Choose SVD File"
       }
     ],
     "configuration": {
@@ -62,12 +66,12 @@
         {
           "when": "true",
           "command": "openocd-tools.flash",
-          "group": "1_run@3"
+          "group": "1_run@4"
         },
         {
           "when": "true",
           "command": "openocd-tools.debug",
-          "group": "1_run@4"
+          "group": "1_run@5"
         },
         {
           "when": "true",
@@ -78,6 +82,11 @@
           "when": "true",
           "command": "openocd-tools.chooseTarget",
           "group": "1_run@2"
+        },
+        {
+          "when": "true",
+          "command": "openocd-tools.chooseSVD",
+          "group": "1_run@3"
         }
       ]
     }
