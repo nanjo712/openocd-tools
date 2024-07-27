@@ -22,9 +22,9 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 				const cfgFile = this.context.workspaceState.get("openocd-tools.cfg", "");
 				const targetFile = this.context.workspaceState.get("openocd-tools.target", "");
 				const svdFile = this.context.workspaceState.get("openocd-tools.svd", "");
-				const cfgFileName = cfgFile.split("[/\\]+").pop();
-				const targetFileName = targetFile.split("[/\\]+").pop();
-				const svdFileName = svdFile.split("[/\\]+").pop();
+				const cfgFileName = cfgFile.split(/[/\\]+/).pop();
+				const targetFileName = targetFile.split(/[/\\]+/).pop();
+				const svdFileName = svdFile.split(/[/\\]+/).pop();
 				if (cfgFile === "") {
 					const item = new vscode.TreeItem("Choose CFG file", vscode.TreeItemCollapsibleState.None);
 					item.command = { command: "openocd-tools.chooseCfg", title: "Choose CFG file" };
