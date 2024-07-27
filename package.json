@@ -9,15 +9,78 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:*.ioc"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "openocd-tools.helloWorld",
-        "title": "Hello World"
+        "command": "openocd-tools.flash",
+        "title": "Flash"
+      },
+      {
+        "command": "openocd-tools.debug",
+        "title": "Debug"
+      },
+      {
+        "command": "openocd-tools.chooseCfg",
+        "title": "Choose OpenOCD Config File"
+      },
+      {
+        "command": "openocd-tools.chooseTarget",
+        "title": "Choose Target"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "OpenOCD Tools",
+      "properties": {
+        "openocd-tools.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/Disable this extension"
+        },
+        "openocd-tools.path": {
+          "type": "string",
+          "default": "openocd",
+          "description": "Path to OpenOCD executable"
+        },
+        "openocd-tools.cfg": {
+          "type": "string",
+          "default": "",
+          "description": "Path to OpenOCD config file"
+        },
+        "openocd-tools.target": {
+          "type": "string",
+          "default": "",
+          "description": "Target to flash/debug"
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "when": "true",
+          "command": "openocd-tools.flash",
+          "group": "1_run@3"
+        },
+        {
+          "when": "true",
+          "command": "openocd-tools.debug",
+          "group": "1_run@4"
+        },
+        {
+          "when": "true",
+          "command": "openocd-tools.chooseCfg",
+          "group": "1_run@1"
+        },
+        {
+          "when": "true",
+          "command": "openocd-tools.chooseTarget",
+          "group": "1_run@2"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
