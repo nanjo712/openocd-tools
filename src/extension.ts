@@ -128,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			FlashTerminal.show();
 			targetFile = targetFile.replace(/\\/g, "/");
-			FlashTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "init;reset init" -c "program ${targetFile} verify reset exit"`);
+			FlashTerminal.sendText(`${openocdExec} -f "${cfgFile}" -c "init;reset init" -c "program ${targetFile} verify reset exit"`);
 		});
 	});
 	context.subscriptions.push(disposableForFlash);	
@@ -159,7 +159,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			DebugTerminal.show();
 			targetFile = targetFile.replace(/\\/g, "/");
-			DebugTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444" -c "program ${targetFile} verify reset" -c "reset"` );
+			DebugTerminal.sendText(`${openocdExec} -f "${cfgFile}" -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444" -c "program ${targetFile} verify reset" -c "reset"` );
 			const launchConfig = {
 				name: "OpenOCD Debug",
             	type: "cppdbg",
@@ -282,8 +282,15 @@ export function activate(context: vscode.ExtensionContext) {
 		const mcuFamilyPromise = IOCFilePromise.then(getMcuFamily);
 		Promise.all([IOCFilePromise, mcuFamilyPromise]).then(([iocFile, mcuFamily]) => {
 			const dgb = context.workspaceState.get("openocd-tools.debugger", "");
-			// convert mcuFamily to lowercase
 			const mcuFamilyLower = mcuFamily.toLowerCase();
+			if (dgb === "") {
+				vscode.window.showErrorMessage("Please choose a debugger first");
+				return;
+			}
+			if (mcuFamily === "") {
+				vscode.window.showErrorMessage("Please Open a folder with IOC file");
+				return;
+			}
 			const cfgContent = `source [find interface/${dgb}.cfg]\nsource [find target/${mcuFamilyLower}x.cfg]\nreset_config none`;
 			const cfgFilePath = vscode.workspace.workspaceFolders![0].uri.fsPath + "/openocd.cfg";
 			fs.writeFileSync(cfgFilePath, cfgContent);
