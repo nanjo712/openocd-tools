@@ -8,7 +8,10 @@
     },
   "description": "A simple tools for OpenOCD",
   "icon": "resources/icon1.png",
-  "version": "0.1.1",
+  "extensionDependencies": [
+    "ms-vscode.cmake-tools"
+  ],
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.91.0"
   },
