@@ -4,8 +4,14 @@
 
 ## Features
 
+- 配置自动生成
+- 自动识别MCU
 - 烧录固件
 - 调试固件
+
+## Documentation
+
+[OpenOCD-Tools使用文档](https://nanjo712.github.io/2024/07/28/OpenOCD-Tools%E4%BD%BF%E7%94%A8%E6%96%87%E6%A1%A3/)
 
 ## Requirements
 
