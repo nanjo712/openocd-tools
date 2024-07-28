@@ -207,7 +207,6 @@ export function activate(context: vscode.ExtensionContext) {
 			if (fileUri) {
 				const filePath = fileUri[0].fsPath;
 				const cfgFile = filePath;
-				const fileName = filePath.split("/").pop();
 				context.workspaceState.update("openocd-tools.cfg", cfgFile);
 				openocdTreeDataProvider.refresh();
 			}
@@ -232,7 +231,7 @@ export function activate(context: vscode.ExtensionContext) {
 				ignoreFocusOut: true
 			});
 			const targetFile = selected?.detail || '';
-			const fileName = targetFile.split("/").pop();
+			const fileName = targetFile.split(/[\\/]+/).pop();
 			statusBarFlash.tooltip = "Flash target file: [" + fileName + "]";
 			statusBarDebug.tooltip = "Debug target file: [" + fileName + "]";
 			context.workspaceState.update("openocd-tools.target", targetFile);
@@ -256,7 +255,6 @@ export function activate(context: vscode.ExtensionContext) {
 			if (fileUri) {
 				const filePath = fileUri[0].fsPath;
 				const svdFile = filePath;
-				const fileName = filePath.split("/").pop();
 				context.workspaceState.update("openocd-tools.svd", svdFile);
 				openocdTreeDataProvider.refresh();
 			}
@@ -307,19 +305,18 @@ export function deactivate() {}
 
 async function findElfFiles(dir: string): Promise<string[]> {
     const files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
-    const elfFiles = files.map(file => file.fsPath);
+    const elfFiles = files.map(file => file.fsPath.replace(/\\/g, '/'));
     return elfFiles;
 }
 
 async function findIOCFile(dir: string): Promise<string> {
 	const files = await vscode.workspace.findFiles('*.ioc', null, 9999);
-	const iocFiles = files.map(file => file.fsPath);
+	const iocFiles = files.map(file => file.fsPath.replace(/\\/g, '/'));
 	return iocFiles[0];
 }
 
 async function getMcuFamily(iocFile: string): Promise<string> {
 	const iocContent = fs.readFileSync(iocFile, 'utf8');
-	// read mcu family like Mcu.Family=STM32F4
 	const family = iocContent.match(/Mcu\.Family=(\w+)/);
 	if (family) {
 		return family[1];
