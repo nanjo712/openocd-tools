@@ -8,7 +8,7 @@
     },
   "description": "A simple tools for OpenOCD",
   "icon": "resources/icon1.png",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.91.0"
   },
@@ -40,6 +40,18 @@
       {
         "command": "openocd-tools.chooseSVD",
         "title": "Choose SVD File"
+      },
+      {
+        "command": "openocd-tools.detectMCU",
+        "title": "Detect MCU"
+      },
+      {
+        "command": "openocd-tools.chooseDebugger",
+        "title": "detect Debugger"
+      },
+      {
+        "command": "openocd-tools.generateCfg",
+        "title": "Generate OpenOCD Config"
       }
     ],
     "configuration": {
@@ -51,35 +63,6 @@
           "description": "Path to OpenOCD executable"
         }
       }
-    },
-    "menus": {
-      "editor/title": [
-        {
-          "when": "true",
-          "command": "openocd-tools.flash",
-          "group": "1_run@4"
-        },
-        {
-          "when": "true",
-          "command": "openocd-tools.debug",
-          "group": "1_run@5"
-        },
-        {
-          "when": "true",
-          "command": "openocd-tools.chooseCfg",
-          "group": "1_run@1"
-        },
-        {
-          "when": "true",
-          "command": "openocd-tools.chooseTarget",
-          "group": "1_run@2"
-        },
-        {
-          "when": "true",
-          "command": "openocd-tools.chooseSVD",
-          "group": "1_run@3"
-        }
-      ]
     },
     "viewsContainers": {
       "activitybar": [

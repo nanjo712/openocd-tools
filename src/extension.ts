@@ -1,6 +1,8 @@
 import { assert } from 'console';
 import { stat } from 'fs';
+import path from 'node:path';
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 
 class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
@@ -18,13 +20,31 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 
 	getChildren(element?: vscode.TreeItem | undefined): vscode.ProviderResult<vscode.TreeItem[]> {
 		if (!element) {
-				const items = [];
+				const items: vscode.TreeItem[] = [];
+				const IOCFilePromise = findIOCFile(vscode.workspace.workspaceFolders![0].uri.fsPath);
+				const mcuFamilyPromise = IOCFilePromise.then(getMcuFamily);
+				const dbg = this.context.workspaceState.get("openocd-tools.debugger", "");
 				const cfgFile = this.context.workspaceState.get("openocd-tools.cfg", "");
 				const targetFile = this.context.workspaceState.get("openocd-tools.target", "");
 				const svdFile = this.context.workspaceState.get("openocd-tools.svd", "");
 				const cfgFileName = cfgFile.split(/[/\\]+/).pop();
 				const targetFileName = targetFile.split(/[/\\]+/).pop();
 				const svdFileName = svdFile.split(/[/\\]+/).pop();
+				items.push(new vscode.TreeItem("Loading MCU Family...", vscode.TreeItemCollapsibleState.None));
+				if (dbg === "") {
+					const item = new vscode.TreeItem("Choose Debugger", vscode.TreeItemCollapsibleState.None);
+					item.command = { command: "openocd-tools.chooseDebugger", title: "Choose Debugger" };
+					items.push(item);
+				} else {
+					const item = new vscode.TreeItem("Debugger: " + dbg, vscode.TreeItemCollapsibleState.None);
+					item.command = { command: "openocd-tools.chooseDebugger", title: "Choose Debugger" };
+					items.push(item);
+				}
+
+				const item = new vscode.TreeItem("Generate CFG file", vscode.TreeItemCollapsibleState.None);
+				item.command = { command: "openocd-tools.generateCfg", title: "Generate CFG file" };
+				items.push(item);
+
 				if (cfgFile === "") {
 					const item = new vscode.TreeItem("Choose CFG file", vscode.TreeItemCollapsibleState.None);
 					item.command = { command: "openocd-tools.chooseCfg", title: "Choose CFG file" };
@@ -58,7 +78,10 @@ class OpenOCDTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 				const debugItem = new vscode.TreeItem("Debug", vscode.TreeItemCollapsibleState.None);
 				debugItem.command = { command: "openocd-tools.debug", title: "Debug" };
 				items.push(debugItem);
-				return Promise.resolve(items);
+				return Promise.all([mcuFamilyPromise]).then(([mcuFamily]) => {
+					items[0].label = "MCU Family: " + mcuFamily;
+					return items;
+				});
 			}
 		return Promise.resolve([]);
 	}
@@ -104,7 +127,7 @@ export function activate(context: vscode.ExtensionContext) {
 				FlashTerminal = vscode.window.createTerminal("OpenOCD Flash");
 			}
 			FlashTerminal.show();
-			FlashTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "program ${targetFile} verify reset exit"`);
+			FlashTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "init;reset init" -c "program ${targetFile} verify reset exit"`);
 		});
 	});
 	context.subscriptions.push(disposableForFlash);	
@@ -134,7 +157,7 @@ export function activate(context: vscode.ExtensionContext) {
 				DebugTerminal = vscode.window.createTerminal("OpenOCD Debug");
 			}
 			DebugTerminal.show();
-			DebugTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444"`);
+			DebugTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444" -c "program ${targetFile} verify reset" -c "reset"` );
 			const launchConfig = {
 				name: "OpenOCD Debug",
             	type: "cppdbg",
@@ -185,34 +208,35 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = fileUri[0].fsPath;
 				const cfgFile = filePath;
 				const fileName = filePath.split("/").pop();
-				openocdTreeDataProvider.refresh();
 				context.workspaceState.update("openocd-tools.cfg", cfgFile);
+				openocdTreeDataProvider.refresh();
 			}
 		});
 	});
 	context.subscriptions.push(disposableForChooseCfg);
 
 	const disposableForChooseTarget = vscode.commands.registerCommand('openocd-tools.chooseTarget', () => {
-		vscode.window.showOpenDialog({
-			canSelectFiles: true,
-			canSelectFolders: false,
-			canSelectMany: false,
-			// set default path to workspace's build directory
-			defaultUri: vscode.workspace.workspaceFolders ? vscode.Uri.file(vscode.workspace.workspaceFolders[0].uri.fsPath + "/build") : undefined,
-			filters: {
-				"Executable and Linkable Format": ["elf"],
-				"All Files": ["*"]
+		findElfFiles(vscode.workspace.workspaceFolders![0].uri.fsPath).then(async (files) => {
+			if (files.length === 0) {
+				vscode.window.showErrorMessage("No ELF file found in build directory");
+				return;
 			}
-		}).then((fileUri) => {
-			if (fileUri) {
-				const filePath = fileUri[0].fsPath;
-				const targetFile = filePath;
-				const fileName = filePath.split("/").pop();
-				openocdTreeDataProvider.refresh();
-				statusBarFlash.tooltip = "Flash target file: [" + fileName + "]";
-				statusBarDebug.tooltip = "Debug target file: [" + fileName + "]";
-				context.workspaceState.update("openocd-tools.target", targetFile);
-			}
+			const items = files.map(file => ({
+            	label: path.basename(file),
+            	description: '',
+            	detail: file
+			})).concat([{ label: 'Cancel', description: '', detail: '' }]);
+			const selected = await vscode.window.showQuickPick(items, {
+				placeHolder: 'Choose a target file',
+				canPickMany: false,
+				ignoreFocusOut: true
+			});
+			const targetFile = selected?.detail || '';
+			const fileName = targetFile.split("/").pop();
+			statusBarFlash.tooltip = "Flash target file: [" + fileName + "]";
+			statusBarDebug.tooltip = "Debug target file: [" + fileName + "]";
+			context.workspaceState.update("openocd-tools.target", targetFile);
+			openocdTreeDataProvider.refresh();
 		});
 	});
 	context.subscriptions.push(disposableForChooseTarget);
@@ -233,12 +257,40 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = fileUri[0].fsPath;
 				const svdFile = filePath;
 				const fileName = filePath.split("/").pop();
-				openocdTreeDataProvider.refresh();
 				context.workspaceState.update("openocd-tools.svd", svdFile);
+				openocdTreeDataProvider.refresh();
 			}
 		});
 	});
 	context.subscriptions.push(disposableForChooseSVD);
+
+	const disposableForChooseDebugger = vscode.commands.registerCommand('openocd-tools.chooseDebugger', () => {
+		const items = ["stlink", "cmsis-dap", "jlink"];
+		vscode.window.showQuickPick(items, {
+			placeHolder: 'Choose a debugger',
+			canPickMany: false,
+			ignoreFocusOut: true
+		}).then((selected) => {
+			context.workspaceState.update("openocd-tools.debugger", selected);
+			openocdTreeDataProvider.refresh();
+		});
+	});
+	context.subscriptions.push(disposableForChooseDebugger);
+
+	const disposableForGenerateCfg = vscode.commands.registerCommand('openocd-tools.generateCfg', () => {
+		const IOCFilePromise = findIOCFile(vscode.workspace.workspaceFolders![0].uri.fsPath);
+		const mcuFamilyPromise = IOCFilePromise.then(getMcuFamily);
+		Promise.all([IOCFilePromise, mcuFamilyPromise]).then(([iocFile, mcuFamily]) => {
+			const dgb = context.workspaceState.get("openocd-tools.debugger", "");
+			// convert mcuFamily to lowercase
+			const mcuFamilyLower = mcuFamily.toLowerCase();
+			const cfgContent = `source [find interface/${dgb}.cfg]\nsource [find target/${mcuFamilyLower}x.cfg]\nreset_config none`;
+			const cfgFilePath = vscode.workspace.workspaceFolders![0].uri.fsPath + "/openocd.cfg";
+			fs.writeFileSync(cfgFilePath, cfgContent);
+			context.workspaceState.update("openocd-tools.cfg", cfgFilePath);
+			openocdTreeDataProvider.refresh();
+		});
+	});
 
 	const terminateDebug = vscode.debug.onDidTerminateDebugSession((session) => {
 		if (session.name === "OpenOCD Debug") {
@@ -252,3 +304,26 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
+
+async function findElfFiles(dir: string): Promise<string[]> {
+    const files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
+    const elfFiles = files.map(file => file.fsPath);
+    return elfFiles;
+}
+
+async function findIOCFile(dir: string): Promise<string> {
+	const files = await vscode.workspace.findFiles('*.ioc', null, 9999);
+	const iocFiles = files.map(file => file.fsPath);
+	return iocFiles[0];
+}
+
+async function getMcuFamily(iocFile: string): Promise<string> {
+	const iocContent = fs.readFileSync(iocFile, 'utf8');
+	// read mcu family like Mcu.Family=STM32F4
+	const family = iocContent.match(/Mcu\.Family=(\w+)/);
+	if (family) {
+		return family[1];
+	}
+	return '';
+}
+
