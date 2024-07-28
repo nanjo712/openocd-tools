@@ -7,7 +7,7 @@
     "url": "https://github.com/nanjo712/openocd-tools.git"
     },
   "description": "A simple tools for OpenOCD",
-  "icon": "resources/image.png",
+  "icon": "resources/icon1.png",
   "version": "0.0.5",
   "engines": {
     "vscode": "^1.91.0"
