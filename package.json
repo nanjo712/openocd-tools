@@ -8,7 +8,7 @@
     },
   "description": "A simple tools for OpenOCD",
   "icon": "resources/icon1.png",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.91.0"
   },
