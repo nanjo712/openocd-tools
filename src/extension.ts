@@ -107,9 +107,9 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarDebug.show();
 
 	const disposableForFlash = vscode.commands.registerCommand('openocd-tools.flash', () => {
-		const openocdExec = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
-		const cfgFile = context.workspaceState.get("openocd-tools.cfg", "");
-		const targetFile = context.workspaceState.get("openocd-tools.target", "");
+		const openocdExec:string = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
+		const cfgFile:string = context.workspaceState.get("openocd-tools.cfg", "");
+		const targetFile:string = context.workspaceState.get("openocd-tools.target", "");
 		if (cfgFile === '') {
 			vscode.window.showErrorMessage("Please choose a cfg file first");
 			return;
@@ -127,16 +127,17 @@ export function activate(context: vscode.ExtensionContext) {
 				FlashTerminal = vscode.window.createTerminal("OpenOCD Flash");
 			}
 			FlashTerminal.show();
+			targetFile.replace(/\\/g, "/");
 			FlashTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "init;reset init" -c "program ${targetFile} verify reset exit"`);
 		});
 	});
 	context.subscriptions.push(disposableForFlash);	
 
 	const disposableForDebug = vscode.commands.registerCommand('openocd-tools.debug', () => {
-		const openocdExec = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
-		const cfgFile = context.workspaceState.get("openocd-tools.cfg", "");
-		const targetFile = context.workspaceState.get("openocd-tools.target", "");
-		const svdFile = context.workspaceState.get("openocd-tools.svd", "");
+		const openocdExec:string = vscode.workspace.getConfiguration("openocd-tools").get("path", "openocd");
+		const cfgFile:string = context.workspaceState.get("openocd-tools.cfg", "");
+		const targetFile:string = context.workspaceState.get("openocd-tools.target", "");
+		const svdFile:string = context.workspaceState.get("openocd-tools.svd", "");
 		if (cfgFile === '') {
 			vscode.window.showErrorMessage("Please choose a cfg file first");
 			return;
@@ -157,6 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
 				DebugTerminal = vscode.window.createTerminal("OpenOCD Debug");
 			}
 			DebugTerminal.show();
+			targetFile.replace(/\\/g, "/");
 			DebugTerminal.sendText(`${openocdExec} -f ${cfgFile} -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444" -c "program ${targetFile} verify reset" -c "reset"` );
 			const launchConfig = {
 				name: "OpenOCD Debug",
@@ -305,13 +307,13 @@ export function deactivate() {}
 
 async function findElfFiles(dir: string): Promise<string[]> {
     const files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
-    const elfFiles = files.map(file => file.fsPath.replace(/\\/g, '/'));
+    const elfFiles = files.map(file => file.fsPath);
     return elfFiles;
 }
 
 async function findIOCFile(dir: string): Promise<string> {
 	const files = await vscode.workspace.findFiles('*.ioc', null, 9999);
-	const iocFiles = files.map(file => file.fsPath.replace(/\\/g, '/'));
+	const iocFiles = files.map(file => file.fsPath);
 	return iocFiles[0];
 }
 
