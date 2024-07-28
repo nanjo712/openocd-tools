@@ -6,8 +6,9 @@
     "type": "git",
     "url": "https://github.com/nanjo712/openocd-tools.git"
     },
-  "description": "",
-  "version": "0.0.4",
+  "description": "A simple tools for OpenOCD",
+  "icon": "resources/image.png",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.91.0"
   },
@@ -48,16 +49,6 @@
           "type": "string",
           "default": "openocd",
           "description": "Path to OpenOCD executable"
-        },
-        "openocd-tools.cfg": {
-          "type": "string",
-          "default": "",
-          "description": "Path to OpenOCD config file"
-        },
-        "openocd-tools.target": {
-          "type": "string",
-          "default": "",
-          "description": "Target to flash/debug"
         }
       }
     },
@@ -95,7 +86,7 @@
         {
           "id": "openocd-tools",
           "title": "OpenOCD Tools",
-          "icon": "resources/image.png"
+          "icon": "resources/icon.svg"
         }
       ]
     },

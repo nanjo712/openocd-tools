@@ -1,41 +1,46 @@
-# openocd-tools README
+# OpenOCD Tools On VSCode
 
-A simple tools for openocd. 
-
-Only support STM32 for now.
+一个简易的OpenOCD工具：封装OpenOCD的烧录操作和调试操作。
 
 ## Features
 
-- Flash firmware
-- Debug firmware
+- 烧录固件
+- 调试固件
 
 ## Requirements
 
-- openocd
-- cmake-tools extension on VSCode
-- ARM GNU Toolchain
+- OpenOCD
+- CMake Tools 拓展
+-  Embedded Tools 拓展（可选）
+  - 查看外设寄存器
+  - 调试RTOS
+
+- RTOS Views / Peripheral Viewer （可选）
+  - 查看外设寄存器
+  - 调试RTOS
+
 
 ## Extension Settings
 
-This extension contributes the following settings:
+使用该拓展前，需要设置OpenOCD可执行文件的路径
 
-* `openocd-tools.path`: Path to openocd executable
-* `openocd-tools.cfg`: Path to openocd configuration file
-* `openocd-tools.target`: Path to target firmware
+- `openocd-tools.path`：指定一个OpenOCD可执行的路径
+  - 默认值：`openocd`
+  - 示例：`/usr/bin/openocd`或者`XXX/openocd.exe`
 
 ## Known Issues
 
-- Only support STM32 for now
+- 依赖CMake进行编译
 
 ## Release Notes
 
 ### 0.0.1
 
-Initial release of openocd-tools
+初次发布
 
 ### 0.0.2
 
-Fix bug: path error
+- 修复路径获取错误的问题
 
 ### 0.0.3
 
@@ -45,6 +50,10 @@ Fix bug: path error
 ### 0.0.4
 
 - 修复正则表达式格式错误的问题
+
+### 0.0.5
+
+- 更新文档和图标，增加文字描述
 
 ---
 

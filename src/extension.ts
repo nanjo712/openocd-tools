@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (ret) {
 				vscode.window.showErrorMessage("Build failed");
 				return;
-			}
+			}		
 			if (!FlashTerminal || FlashTerminal.exitStatus) {
 				FlashTerminal = vscode.window.createTerminal("OpenOCD Flash");
 			}
