@@ -325,6 +325,9 @@ async function findIOCFile(dir: string): Promise<string> {
 }
 
 async function getMcuFamily(iocFile: string): Promise<string> {
+	if (!iocFile) {
+		return '';
+	}
 	const iocContent = fs.readFileSync(iocFile, 'utf8');
 	const family = iocContent.match(/Mcu\.Family=(\w+)/);
 	if (family) {
