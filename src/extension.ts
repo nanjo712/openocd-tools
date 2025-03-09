@@ -315,7 +315,7 @@ export function deactivate() {}
 async function findElfFiles(dir: string): Promise<string[]> {
     let files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
     if (files.length === 0) {
-        function isElfFile(filePath) {
+        function isElfFile(filePath: string): boolean {
             const buffer = Buffer.alloc(4);
             const fd = fs.openSync(filePath, 'r');
             fs.readSync(fd, buffer, 0, 4, 0);
