@@ -313,7 +313,18 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 async function findElfFiles(dir: string): Promise<string[]> {
-    const files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
+    let files = await vscode.workspace.findFiles('**/*.elf', null, 9999);
+    if (files.length === 0) {
+        function isElfFile(filePath) {
+            const buffer = Buffer.alloc(4);
+            const fd = fs.openSync(filePath, 'r');
+            fs.readSync(fd, buffer, 0, 4, 0);
+            fs.closeSync(fd);
+            return buffer.toString('hex') === '7f454c46'; // ELF files start with 0x7F 'E' 'L' 'F'
+        }
+        files = await vscode.workspace.findFiles('**/*', '**/node_modules/**', 9999);
+        files = files.filter(file => !path.basename(file.fsPath).includes('.') && isElfFile(file.fsPath));
+    }
     const elfFiles = files.map(file => file.fsPath);
     return elfFiles;
 }
@@ -325,6 +336,9 @@ async function findIOCFile(dir: string): Promise<string> {
 }
 
 async function getMcuFamily(iocFile: string): Promise<string> {
+	if (!iocFile) {
+		return '';
+	}
 	const iocContent = fs.readFileSync(iocFile, 'utf8');
 	const family = iocContent.match(/Mcu\.Family=(\w+)/);
 	if (family) {
