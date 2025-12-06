@@ -149,6 +149,38 @@ export function activate(context: vscode.ExtensionContext) {
         if (svdFile === '') {
             vscode.window.showInformationMessage("No SVD file chosen, debugging without SVD file");
         }
+        const launchConfig = {
+            name: "OpenOCD Debug",
+            type: "cppdbg",
+            request: "launch",
+            program: targetFile,
+            svdPath: svdFile,
+            args: [],
+            stopAtEntry: false,
+            cwd: "${workspaceFolder}",
+            environment: [],
+            externalConsole: false,
+            MIMode: "gdb",
+            miDebuggerPath: "gdb-multiarch",
+            setupCommands: [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set remote target to port 3333",
+                    "text": "target remote :3333",
+                    "ignoreFailures": false
+                }
+            ]
+        };
+        writeLaunchConfigToWorkspace(launchConfig);
         vscode.commands.executeCommand("cmake.build").then((ret) => {
             if (ret) {
                 vscode.window.showErrorMessage("Build failed");
@@ -160,36 +192,6 @@ export function activate(context: vscode.ExtensionContext) {
             DebugTerminal.show();
             targetFile = targetFile.replace(/\\/g, "/");
             DebugTerminal.sendText(`${openocdExec} -f "${cfgFile}" -c "gdb_port 3333" -c "tcl_port disabled" -c "telnet_port 4444" -c "program ${targetFile} verify reset" -c "reset"`);
-            const launchConfig = {
-                name: "OpenOCD Debug",
-                type: "cppdbg",
-                request: "launch",
-                program: targetFile,
-                svdPath: svdFile,
-                args: [],
-                stopAtEntry: false,
-                cwd: "${workspaceFolder}",
-                environment: [],
-                externalConsole: false,
-                MIMode: "gdb",
-                setupCommands: [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    },
-                    {
-                        "description": "Set Disassembly Flavor to Intel",
-                        "text": "-gdb-set disassembly-flavor intel",
-                        "ignoreFailures": true
-                    },
-                    {
-                        "description": "Set remote target to port 3333",
-                        "text": "target remote :3333",
-                        "ignoreFailures": false
-                    }
-                ]
-            };
             vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], launchConfig);
         });
     });
@@ -345,5 +347,29 @@ async function getMcuFamily(iocFile: string): Promise<string> {
         return family[1];
     }
     return '';
+}
+
+async function writeLaunchConfigToWorkspace(newConfig: any) {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+        vscode.window.showErrorMessage('没有打开的工作区，无法保存配置。');
+        return;
+    }
+    const launchConfiguration = vscode.workspace.getConfiguration('launch', workspaceFolder.uri);
+
+    let configurations = launchConfiguration.get<any[]>('configurations') || [];
+
+    const index = configurations.findIndex(c => c.name === newConfig.name);
+
+    if (index !== -1) {
+        console.log(`Configuration "${newConfig.name}" already exists.`);
+    } else {
+        configurations.push(newConfig);
+        console.log(`Added new configuration: ${newConfig.name}`);
+    }
+
+    await launchConfiguration.update('configurations', configurations, vscode.ConfigurationTarget.WorkspaceFolder);
+
+    vscode.window.showInformationMessage(`调试配置 "${newConfig.name}" 已保存到 launch.json`);
 }
 
